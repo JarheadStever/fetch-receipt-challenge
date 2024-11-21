@@ -13,7 +13,7 @@ type ProcessResponse struct {
 }
 
 type RetrievePointsResponse struct {
-	Points int64 `json:"points"`
+	Points int `json:"points"`
 }
 
 
@@ -27,15 +27,20 @@ func Process(w http.ResponseWriter, r *http.Request) {
     }
 
 	receipt := Receipt{}
-	json.Unmarshal(body, &receipt)
+	if err := json.Unmarshal(body, &receipt); err != nil { 
+		http.Error(w, "The receipt is invalid", http.StatusBadRequest)
+		return
+	}
 
 	if err := receipt.Validate(); err != nil {
 		http.Error(w, "The receipt is invalid", http.StatusBadRequest)
 		return
 	}
 
-    id := uuid.New()
-    json, err := json.Marshal(ProcessResponse{ID: id})
+    // id := uuid.New()
+    // json, err := json.Marshal(ProcessResponse{ID: id})
+	points := receipt.CountPoints()
+	json, err := json.Marshal(RetrievePointsResponse{Points: points})
 	if err != nil { 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
         return
