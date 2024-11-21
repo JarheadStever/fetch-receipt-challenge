@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	// "github.com/gorilla/mux"
+
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type ProcessResponse struct {
@@ -37,31 +38,41 @@ func Process(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    // id := uuid.New()
-    // json, err := json.Marshal(ProcessResponse{ID: id})
-	points := receipt.CountPoints()
-	json, err := json.Marshal(RetrievePointsResponse{Points: points})
+    id := uuid.New()
+    json, err := json.Marshal(ProcessResponse{ID: id})
 	if err != nil { 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
 
-	// TODO: add to "database"
+	processedReceipts[id] = receipt.CountPoints()
 
 	w.Header().Set("Content-Type", "application/json")
     w.Write(json)
 }
 
 func RetrievePoints(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
 
-	response := map[string]int{"points": 23}
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Receipt not found", http.StatusNotFound)
+		return
+	}
 
-	jsonData, err := json.Marshal(response)
+	points, exists := processedReceipts[id]
+	if !exists {
+		http.Error(w, "Receipt not found", http.StatusNotFound)
+		return
+	}
+
+	json, err := json.Marshal(RetrievePointsResponse{Points: points})
 	if err != nil {
 		http.Error(w, "JSON error", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonData)
+	w.Write(json)
 }
