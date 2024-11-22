@@ -17,13 +17,14 @@ type RetrievePointsResponse struct {
 	Points int `json:"points"`
 }
 
-
+/*
+Validate an input receipt, calculate its points, generate an ID, store it's score, and return the ID 
+*/
 func Process(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil { 
-
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "The receipt is invalid", http.StatusBadRequest)
         return
     }
 
@@ -51,6 +52,9 @@ func Process(w http.ResponseWriter, r *http.Request) {
     w.Write(json)
 }
 
+/*
+Retrieve the points value of a receipt given its UUID in the URL (param: "id")
+*/
 func RetrievePoints(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idStr := vars["id"]
@@ -69,7 +73,7 @@ func RetrievePoints(w http.ResponseWriter, r *http.Request) {
 
 	json, err := json.Marshal(RetrievePointsResponse{Points: points})
 	if err != nil {
-		http.Error(w, "JSON error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
