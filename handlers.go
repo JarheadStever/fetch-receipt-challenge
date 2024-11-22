@@ -24,7 +24,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil { 
-		http.Error(w, "The receipt is invalid", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
 
@@ -49,7 +49,10 @@ func Process(w http.ResponseWriter, r *http.Request) {
 	processedReceipts[id] = receipt.CountPoints()
 
 	w.Header().Set("Content-Type", "application/json")
-    w.Write(json)
+	if _, err := w.Write(json); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 /*
@@ -78,5 +81,8 @@ func RetrievePoints(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(json)
+	if _, err := w.Write(json); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

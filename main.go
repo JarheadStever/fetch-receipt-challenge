@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var processedReceipts = make(map[uuid.UUID]int)
 
+var processedReceipts = make(map[uuid.UUID]int)
 
 func main() {
 
