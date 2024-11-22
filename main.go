@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,12 +15,17 @@ var processedReceipts = make(map[uuid.UUID]int)
 
 func main() {
 
-	r := mux.NewRouter().StrictSlash(true)
+	var portNumber int
+	flag.IntVar(&portNumber, "port", 3005, "Port used by Receipt Service")
+	flag.Parse()
+    if 1 > portNumber || portNumber > 65535 {
+        log.Fatal("Port must be between 1 and 65535")
+    }
 
+	r := mux.NewRouter()
 	r.HandleFunc("/receipts/process", Process).Methods("POST")
 	r.HandleFunc("/receipts/{id}/points", RetrievePoints).Methods("GET")
 
-	port := 3005
-	log.Println("Starting on port: ", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprint(":", port), r))
+	log.Println("Starting Receipt Service on port", portNumber)
+	log.Fatal(http.ListenAndServe(fmt.Sprint(":", portNumber), r))
 }

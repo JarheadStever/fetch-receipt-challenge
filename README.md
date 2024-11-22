@@ -20,6 +20,10 @@ go build -o jaredsapp
 ```
 ./jaredsapp
 ```
+NOTE: The default port is `:3005`. To specify a different port, use the `--port` flag like so:
+```
+./jaredsapp --port 8080
+```
 
 To try it out, `POST` to `localhost:3005/receipts/process` this JSON body:
 ```
