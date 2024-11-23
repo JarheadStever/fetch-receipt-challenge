@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -35,6 +36,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := receipt.Validate(); err != nil {
+		log.Println("Invalid receipt:", err)
 		http.Error(w, "The receipt is invalid", http.StatusBadRequest)
 		return
 	}
