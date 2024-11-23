@@ -10,7 +10,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-
 var processedReceipts = make(map[uuid.UUID]int)
 
 func main() {
@@ -18,9 +17,9 @@ func main() {
 	var portNumber int
 	flag.IntVar(&portNumber, "port", 3005, "Port used by Receipt Service")
 	flag.Parse()
-    if 1 > portNumber || portNumber > 65535 {
-        log.Fatal("Port must be between 1 and 65535")
-    }
+	if 1 > portNumber || portNumber > 65535 {
+		log.Fatal("Port must be between 1 and 65535")
+	}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/receipts/process", Process).Methods("POST")

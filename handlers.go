@@ -18,18 +18,18 @@ type RetrievePointsResponse struct {
 }
 
 /*
-Validate an input receipt, calculate its points, generate an ID, store it's score, and return the ID 
+Validate an input receipt, calculate its points, generate an ID, store it's score, and return the ID
 */
 func Process(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
-	if err != nil { 
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+		return
+	}
 
 	receipt := Receipt{}
-	if err := json.Unmarshal(body, &receipt); err != nil { 
+	if err := json.Unmarshal(body, &receipt); err != nil {
 		http.Error(w, "The receipt is invalid", http.StatusBadRequest)
 		return
 	}
@@ -39,12 +39,12 @@ func Process(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    id := uuid.New()
-    json, err := json.Marshal(ProcessResponse{ID: id})
-	if err != nil { 
+	id := uuid.New()
+	json, err := json.Marshal(ProcessResponse{ID: id})
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
+		return
+	}
 
 	processedReceipts[id] = receipt.CountPoints()
 

@@ -111,3 +111,4 @@ components:
                     type: string
                     pattern: "^\\d+\\.\\d{2}$"
                     example: "6.49"
+                    

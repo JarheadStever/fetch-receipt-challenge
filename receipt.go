@@ -11,16 +11,16 @@ import (
 )
 
 type Receipt struct {
-    Retailer     string `json:"retailer"`
-    PurchaseDate string `json:"purchaseDate"`
-    PurchaseTime string `json:"purchaseTime"`
-    Items        []Item `json:"items"`
-    Total        string `json:"total"`
+	Retailer     string `json:"retailer"`
+	PurchaseDate string `json:"purchaseDate"`
+	PurchaseTime string `json:"purchaseTime"`
+	Items        []Item `json:"items"`
+	Total        string `json:"total"`
 }
 
 type Item struct {
-    ShortDescription string `json:"shortDescription"`
-    Price            string `json:"price"`
+	ShortDescription string `json:"shortDescription"`
+	Price            string `json:"price"`
 }
 
 /*
@@ -87,7 +87,7 @@ func (r *Receipt) CountPoints() int {
 		TimeScore(r.PurchaseTime)
 }
 
-/* 
+/*
 One point for every alphanumeric character in the retailer name.
 */
 func ReltailerNameScore(r string) int {
@@ -118,7 +118,7 @@ func TotalPriceScore(t string) int {
 	}
 }
 
-/* 
+/*
 5 points for every two items on the receipt.
 (Then, for each item) If the trimmed length of the item description is a multiple of 3, multiply
 the price by 0.2 and round up to the nearest integer. The result is the number of points earned.
@@ -138,7 +138,7 @@ func TotalItemsScore(items []Item) int {
 	return score
 }
 
-/* 
+/*
 6 points if the day in the purchase date is odd.
 */
 func DateScore(d string) int {
@@ -149,7 +149,7 @@ func DateScore(d string) int {
 	return 0
 }
 
-/* 
+/*
 10 points if the time of purchase is after 2:00pm and before 4:00pm.
 */
 func TimeScore(t string) int {
