@@ -23,13 +23,18 @@ type Item struct {
 	Price            string `json:"price"`
 }
 
+// Compiling regexes can be expensive so we want to only do it once
+var retailerRegex = regexp.MustCompile(`^[\w\s\-&]+$`)
+var totalRegex = regexp.MustCompile(`^\d+\.\d{2}$`)
+var descriptionRegex = regexp.MustCompile(`^[\w\s\-]+$`)
+var priceRegex = regexp.MustCompile(`^\d+\.\d{2}$`)
+
 /*
 Validate each part of a receipt by matching regexes and time/date values to the API spec
 */
 func (r *Receipt) Validate() error {
 
-	retailerPattern := `^[\w\s\-&]+$`
-	if !regexp.MustCompile(retailerPattern).MatchString(r.Retailer) {
+	if !retailerRegex.MatchString(r.Retailer) {
 		return fmt.Errorf("invalid retailer: %s", r.Retailer)
 	}
 
@@ -41,8 +46,7 @@ func (r *Receipt) Validate() error {
 		return fmt.Errorf("invalid purchaseTime: %s", r.PurchaseTime)
 	}
 
-	totalPattern := `^\d+\.\d{2}$`
-	if !regexp.MustCompile(totalPattern).MatchString(r.Total) {
+	if !totalRegex.MatchString(r.Total) {
 		return fmt.Errorf("invalid total: %s", r.Total)
 	}
 
@@ -63,13 +67,11 @@ Validate an item with in a receipt by matching regexes to the API spec
 */
 func (i *Item) Validate() error {
 
-	descriptionPattern := `^[\w\s\-]+$`
-	if !regexp.MustCompile(descriptionPattern).MatchString(i.ShortDescription) {
+	if !descriptionRegex.MatchString(i.ShortDescription) {
 		return fmt.Errorf("invalid shortDescription: %s", i.ShortDescription)
 	}
 
-	pricePattern := `^\d+\.\d{2}$`
-	if !regexp.MustCompile(pricePattern).MatchString(i.Price) {
+	if !priceRegex.MatchString(i.Price) {
 		return fmt.Errorf("invalid price: %s", i.Price)
 	}
 
