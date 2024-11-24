@@ -30,18 +30,21 @@ type Validators []struct {
 	function Validator
 }
 
-type validationErrors []error
+type validationErrors struct {
+	errs []error
+}
 
-func (ve validationErrors) Error() error {
-	if len(ve) == 0 {
-		return nil
-	}
+func (ve validationErrors) Error() string {
 	var sb strings.Builder
-	for _, err := range ve {
+	for _, err := range ve.errs {
 		sb.WriteString(err.Error())
 		sb.WriteString("\n")
 	}
-	return errors.New(sb.String())
+	return sb.String()
+}
+
+func (ve validationErrors) isEmpty() bool {
+	return (len(ve.errs) == 0)
 }
 
 func validatePattern(pattern *regexp.Regexp, fieldName string) Validator {
@@ -75,7 +78,7 @@ func checkValidators(validators Validators) validationErrors {
 	var validationErrors validationErrors
 	for _, v := range validators {
 		if err := v.function(v.input); err != nil {
-			validationErrors = append(validationErrors, err)
+			validationErrors.errs = append(validationErrors.errs, err)
 		}
 	}
 	return validationErrors
@@ -99,16 +102,19 @@ func (r *Receipt) Validate() error {
 	validationErrors := checkValidators(validators)
 
 	if len(r.Items) < 1 {
-		validationErrors = append(validationErrors, errors.New("receipt needs at least one item"))
+		validationErrors.errs = append(validationErrors.errs, errors.New("receipt needs at least one item"))
 	}
 
 	for _, item := range r.Items {
 		if err := item.Validate(); err != nil {
-			validationErrors = append(validationErrors, fmt.Errorf("invalid item [%v]. Error: %s", item.ShortDescription, err))
+			validationErrors.errs = append(validationErrors.errs, fmt.Errorf("invalid item [%v]. Error: %s", item.ShortDescription, err))
 		}
 	}
 
-	return validationErrors.Error()
+	if validationErrors.isEmpty() {
+		return nil
+	}
+	return validationErrors
 }
 
 var descriptionRegex = regexp.MustCompile(`^[\w\s\-]+$`)
@@ -125,7 +131,11 @@ func (i *Item) Validate() error {
 	}
 
 	validationErrors := checkValidators(validators)
-	return validationErrors.Error()
+	
+	if validationErrors.isEmpty() {
+		return nil
+	}
+	return validationErrors
 }
 
 /*
