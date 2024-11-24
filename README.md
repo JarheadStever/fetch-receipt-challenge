@@ -57,7 +57,7 @@ You should receive a UUID for that receipt and can retrieve its score by `GET`ti
 
 
 ## Thoughts
-***A note on Validation:*** I think that ultimately, the way I abstracted the validation a bit into a more applicative instead of monadic style is a good approach and would be beneficial for testing/logging. That said, it also made things a bit more complex than I think was necessary for this exercise. The simple validation (see the original code here) also met the requirements and I was torn on which route to go for my submission. Interesting to think about...
+***A note on Validation:*** I think that ultimately, the way I abstracted the validation a bit into a more applicative instead of monadic style is a good approach and would be beneficial for testing/logging. That said, it also made things a bit more complex than I think was necessary for this exercise. The simple validation (see the original code here)[https://github.com/JarheadStever/fetch-receipt-challenge/blob/simple-validation/receipt.go#L26-L79] also met the requirements and I was torn on which route to go for my submission. Interesting to think about...
 
 ####  Things I like about this implementation
 - It's simple. No overengineering here, just a few simple files that perform the expected operations to calculate, store, and fetch receipt scores.
