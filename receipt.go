@@ -30,6 +30,20 @@ type Validators []struct {
 	function Validator
 }
 
+type validationErrors []error
+
+func (ve validationErrors) Error() error {
+	if len(ve) == 0 {
+		return nil
+	}
+	var sb strings.Builder
+	for _, err := range ve {
+		sb.WriteString(err.Error())
+		sb.WriteString("\n")
+	}
+	return errors.New(sb.String())
+}
+
 func validatePattern(pattern *regexp.Regexp, fieldName string) Validator {
 	return func(value string) error {
 		if !pattern.MatchString(value) {
@@ -57,20 +71,8 @@ func validateTime(fieldName string) Validator {
 	}
 }
 
-func combineErrors(errs []error) error {
-	if len(errs) == 0 {
-		return nil
-	}
-	var sb strings.Builder
-	for _, err := range errs {
-		sb.WriteString(err.Error())
-		sb.WriteString("\n")
-	}
-	return errors.New(sb.String())
-}
-
-func checkValidators(validators Validators) []error {
-	var validationErrors []error
+func checkValidators(validators Validators) validationErrors {
+	var validationErrors validationErrors
 	for _, v := range validators {
 		if err := v.function(v.input); err != nil {
 			validationErrors = append(validationErrors, err)
@@ -106,7 +108,7 @@ func (r *Receipt) Validate() error {
 		}
 	}
 
-	return combineErrors(validationErrors)
+	return validationErrors.Error()
 }
 
 var descriptionRegex = regexp.MustCompile(`^[\w\s\-]+$`)
@@ -122,7 +124,8 @@ func (i *Item) Validate() error {
 		{i.Price, validatePattern(priceRegex, "price")},
 	}
 
-	return combineErrors(checkValidators(validators))
+	validationErrors := checkValidators(validators)
+	return validationErrors.Error()
 }
 
 /*
