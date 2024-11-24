@@ -47,6 +47,10 @@ func (ve validationErrors) isEmpty() bool {
 	return (len(ve.errs) == 0)
 }
 
+func (ve *validationErrors) add(err error) {
+	ve.errs = append(ve.errs, err)
+}
+
 func validatePattern(pattern *regexp.Regexp, fieldName string) Validator {
 	return func(value string) error {
 		if !pattern.MatchString(value) {
@@ -78,7 +82,7 @@ func checkValidators(validators Validators) validationErrors {
 	var validationErrors validationErrors
 	for _, v := range validators {
 		if err := v.function(v.input); err != nil {
-			validationErrors.errs = append(validationErrors.errs, err)
+			validationErrors.add(err)
 		}
 	}
 	return validationErrors
@@ -102,12 +106,12 @@ func (r *Receipt) Validate() error {
 	validationErrors := checkValidators(validators)
 
 	if len(r.Items) < 1 {
-		validationErrors.errs = append(validationErrors.errs, errors.New("receipt needs at least one item"))
+		validationErrors.add(errors.New("receipt needs at least one item"))
 	}
 
 	for _, item := range r.Items {
 		if err := item.Validate(); err != nil {
-			validationErrors.errs = append(validationErrors.errs, fmt.Errorf("invalid item [%v]. Error: %s", item.ShortDescription, err))
+			validationErrors.add(fmt.Errorf("invalid item [%v]. Error: %s", item.ShortDescription, err))
 		}
 	}
 
@@ -131,7 +135,7 @@ func (i *Item) Validate() error {
 	}
 
 	validationErrors := checkValidators(validators)
-	
+
 	if validationErrors.isEmpty() {
 		return nil
 	}
