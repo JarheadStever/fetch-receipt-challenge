@@ -23,57 +23,123 @@ type Item struct {
 	Price            string `json:"price"`
 }
 
+type Validator func(value string) error
+
+type Validators []struct {
+	input    string
+	function Validator
+}
+
+type validationErrors struct {
+	errs []error
+}
+
+func (ve validationErrors) Error() string {
+	var sb strings.Builder
+	for _, err := range ve.errs {
+		sb.WriteString(err.Error())
+		sb.WriteString("\n")
+	}
+	return sb.String()
+}
+
+func (ve validationErrors) isEmpty() bool {
+	return (len(ve.errs) == 0)
+}
+
+func (ve *validationErrors) add(err error) {
+	ve.errs = append(ve.errs, err)
+}
+
+func validatePattern(pattern *regexp.Regexp, fieldName string) Validator {
+	return func(value string) error {
+		if !pattern.MatchString(value) {
+			return fmt.Errorf("invalid %s: %s", fieldName, value)
+		}
+		return nil
+	}
+}
+
+func validateDate(fieldName string) Validator {
+	return func(value string) error {
+		if _, err := time.Parse("2006-01-02", value); err != nil {
+			return fmt.Errorf("invalid %s: %s", fieldName, value)
+		}
+		return nil
+	}
+}
+
+func validateTime(fieldName string) Validator {
+	return func(value string) error {
+		if _, err := time.Parse("15:04", value); err != nil {
+			return fmt.Errorf("invalid %s: %s", fieldName, value)
+		}
+		return nil
+	}
+}
+
+func checkValidators(validators Validators) validationErrors {
+	var validationErrors validationErrors
+	for _, v := range validators {
+		if err := v.function(v.input); err != nil {
+			validationErrors.add(err)
+		}
+	}
+	return validationErrors
+}
+
+var retailerRegex = regexp.MustCompile(`^[\w\s\-&]+$`)
+var totalRegex = regexp.MustCompile(`^\d+\.\d{2}$`)
+
 /*
 Validate each part of a receipt by matching regexes and time/date values to the API spec
 */
 func (r *Receipt) Validate() error {
 
-	retailerPattern := `^[\w\s\-&]+$`
-	if !regexp.MustCompile(retailerPattern).MatchString(r.Retailer) {
-		return fmt.Errorf("invalid retailer: %s", r.Retailer)
+	validators := Validators{
+		{r.Retailer, validatePattern(retailerRegex, "retailer")},
+		{r.PurchaseDate, validateDate("purchaseDate")},
+		{r.PurchaseTime, validateTime("purchaseTime")},
+		{r.Total, validatePattern(totalRegex, "total")},
 	}
 
-	if _, err := time.Parse("2006-01-02", r.PurchaseDate); err != nil {
-		return fmt.Errorf("invalid purchaseDate: %s", r.PurchaseDate)
-	}
-
-	if _, err := time.Parse("15:04", r.PurchaseTime); err != nil {
-		return fmt.Errorf("invalid purchaseTime: %s", r.PurchaseTime)
-	}
-
-	totalPattern := `^\d+\.\d{2}$`
-	if !regexp.MustCompile(totalPattern).MatchString(r.Total) {
-		return fmt.Errorf("invalid total: %s", r.Total)
-	}
+	validationErrors := checkValidators(validators)
 
 	if len(r.Items) < 1 {
-		return errors.New("receipt must have at least one item")
+		validationErrors.add(errors.New("receipt needs at least one item"))
 	}
+
 	for _, item := range r.Items {
 		if err := item.Validate(); err != nil {
-			return fmt.Errorf("invalid item %v", item)
+			validationErrors.add(fmt.Errorf("invalid item [%v]. Error: %s", item.ShortDescription, err))
 		}
 	}
 
-	return nil
+	if validationErrors.isEmpty() {
+		return nil
+	}
+	return validationErrors
 }
+
+var descriptionRegex = regexp.MustCompile(`^[\w\s\-]+$`)
+var priceRegex = regexp.MustCompile(`^\d+\.\d{2}$`)
 
 /*
 Validate an item with in a receipt by matching regexes to the API spec
 */
 func (i *Item) Validate() error {
 
-	descriptionPattern := `^[\w\s\-]+$`
-	if !regexp.MustCompile(descriptionPattern).MatchString(i.ShortDescription) {
-		return fmt.Errorf("invalid shortDescription: %s", i.ShortDescription)
+	validators := Validators{
+		{i.ShortDescription, validatePattern(descriptionRegex, "shortDescription")},
+		{i.Price, validatePattern(priceRegex, "price")},
 	}
 
-	pricePattern := `^\d+\.\d{2}$`
-	if !regexp.MustCompile(pricePattern).MatchString(i.Price) {
-		return fmt.Errorf("invalid price: %s", i.Price)
-	}
+	validationErrors := checkValidators(validators)
 
-	return nil
+	if validationErrors.isEmpty() {
+		return nil
+	}
+	return validationErrors
 }
 
 /*
